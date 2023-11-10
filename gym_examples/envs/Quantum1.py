@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import gymnasium as gym
-from gym import spaces
+from gymnasium import spaces
 import numpy as np
 import torch
 import torch.nn as nn
@@ -32,7 +32,7 @@ class QuantumEnv(gym.Env):
         self.transformed_state = self.get_transformed_state(self.current_state)
         
         #continuous state and action space 일단 ndarray (sampling_rate, 2)
-        self.action_space = spaces.Tuple((spaces.Box(low=0, high=1, shape=(N, 2)),))
+        self.action_space = spaces.Tuple((spaces.Box(low=-1, high=1, shape=(N, 2)),))
         self.observation_space = spaces.Tuple((spaces.Box(low=-np.inf, high=np.inf, shape=(N, 2)),))
     
     def _get_obs(self):
@@ -51,9 +51,9 @@ class QuantumEnv(gym.Env):
         """
         A_ = np.fft.fft(state[:,0])
         B_ = np.fft.fft(state[:,1])
-        transformer = envelope.ucsb_transformer(transfer_matrix_params=trans_info)
+        transformer = envelope.ucsb_transformer(transfer_matrix_params=self.trans_info)
 
-        h_matrix = np.array([[transformer.transfer_matrix[i][j](np.pi*2*f) for f in freq] for i in range(2) for j in range(2)]).reshape(2, 2, -1)
+        h_matrix = np.array([[transformer.transfer_matrix[i][j](np.pi*2*f) for f in self.freq] for i in range(2) for j in range(2)]).reshape(2, 2, -1)
         h_11, h_12, h_21, h_22 = h_matrix[0][0], h_matrix[0][1], h_matrix[1][0], h_matrix[1][1]
 
         transformed_A_ = h_11 * A_ + h_12 * B_
@@ -91,7 +91,7 @@ class QuantumEnv(gym.Env):
         
         """
      
-        def get_reward(self,action): #get_transformed state()로 얻은 state랑 current_state 비교해서
+        def get_reward(self,action): 
             """
             get_transformed_state(current_state,action)으로 얻은 녀석이 innitial state와 얼마나 다른지  state ndarray (100,2)
             """
@@ -116,7 +116,7 @@ class QuantumEnv(gym.Env):
         
         if terminated==True:
             done = True
-            self.current_state = reset() 
+            self.current_state = self.reset() 
             self.transformed_state = self.get_transformed_state(self.current_state)
             
         else:
