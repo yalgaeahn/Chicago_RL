@@ -139,13 +139,9 @@ from gym.envs.registration import register
 
 register(
     id='QuantumEnv-v0',
-    entry_point='CustomQuantumEnv.QuantumEnv:QuantumEnv-v0',
+    entry_point='QuantumEnv:QuantumEnv',
 )
 
-env = gym.make('QuantumEnv-v0')
-
-
-
-
+env = gym.make('QuantumEnv')
 
 

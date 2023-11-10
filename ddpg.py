@@ -5,8 +5,8 @@ import torch
 from torch.optim import Adam
 import gym
 import time
-import spinup.algos.pytorch.ddpg.core as core
-from spinup.utils.logx import EpochLogger
+import core
+from spinningup.spinup.utils.logx import EpochLogger
 
 
 #  $\mathcal{B}=\lbrace(s,a,r,s',d)\rbrace$ from $\mathcal{D}$
