@@ -32,8 +32,8 @@ class QuantumEnv(gym.Env):
         self.transformed_state = self.get_transformed_state(self.current_state)
         
         #continuous state and action space 일단 ndarray (sampling_rate, 2)
-        self.action_space = spaces.Tuple((spaces.Box(low=-1, high=1, shape=(N, 2)),))
-        self.observation_space = spaces.Tuple((spaces.Box(low=-np.inf, high=np.inf, shape=(N, 2)),))
+        self.action_space = spaces.Box(low=-1, high=1, shape=(N, 2))
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(N, 2))
     
     def _get_obs(self):
         return self.current_state
@@ -114,19 +114,17 @@ class QuantumEnv(gym.Env):
         
         terminated = np.array_equal(self.current_state, self.transformed_state)
         
-        if terminated==True:
-            done = True
+        if terminated:
             self.current_state = self.reset() 
             self.transformed_state = self.get_transformed_state(self.current_state)
             
         else:
-            done = False
             self.current_state = next_state
             self.transformed_state = self.get_transformed_state(self.current_state)
             
     
         
-        return next_state, reward, done, {} # 마지막 dict는 gym API에는 있는데 나는 안쓸거임
+        return next_state, reward, terminated, False, {} # 마지막 dict는 gym API에는 있는데 나는 안쓸거임
     
     def reset(self):
         """
