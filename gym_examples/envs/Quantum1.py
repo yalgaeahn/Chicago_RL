@@ -8,7 +8,6 @@ import envelope
 import matplotlib.pyplot as plt
 
 class QuantumEnv(gym.Env):
-    metadata = {'render.modes' : ['human']}
     
     def __init__(self, Fs, N, initial_state,trans_info):
         """
@@ -35,19 +34,14 @@ class QuantumEnv(gym.Env):
         self.action_space = spaces.Box(low=-1, high=1, shape=(N, 2))
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(N, 2))
     
-    def _get_obs(self):
-        return self.current_state
-    
     
     def get_transformed_state(self, state):
         """
         PARAMETER
-            - state : ndarray of shape (N, 2)
-            - trans_info: Placeholder for the transfer matrix parameters
-            - freq: Placeholder for the frequencies
+            - state : ndarray of shape (N, 2),  dtype=float32
         RETURN
-            - transformed_a_ : ndarray of shape (N,)
-            - transformed_b_ : ndarray of shape (N,)
+            - transformed_state : ndarray of shape (N,2), dtype=float32
+            - 
         """
         A_ = np.fft.fft(state[:,0])
         B_ = np.fft.fft(state[:,1])
@@ -61,6 +55,9 @@ class QuantumEnv(gym.Env):
         
         transformed_a_ = np.fft.ifft(transformed_A_)
         transformed_b_ = np.fft.ifft(transformed_B_)
+
+        transformed_state = np.column_stack((transformed_a_, transformed_b_))
+        
         
         return np.column_stack((transformed_a_, transformed_b_))
     
@@ -88,6 +85,7 @@ class QuantumEnv(gym.Env):
             -truncated(bool):
                 Whether the truncation condition outside the scope of the MDP is satisfied.
                 if true user needs to call `reset()`
+            -info(dict)
         
         """
      
@@ -95,40 +93,37 @@ class QuantumEnv(gym.Env):
             """
             get_transformed_state(current_state,action)으로 얻은 녀석이 innitial state와 얼마나 다른지  state ndarray (100,2)
             """
-            transformed_state = self.get_transformed_state(self.current_state +action)
+            transformed_state = self.get_transformed_state(self.current_state + action)
             
             loss = nn.L1Loss()
         
-            distance = loss(torch.from_numpy(transformed_state.real),torch.from_numpy(self.current_state.real))
+            distance = loss(torch.from_numpy(transformed_state),torch.from_numpy(self.current_state))
     
             reward = -float(distance)
             
             return reward
         
         
-        done = None
-        
-        next_state = self.current_state + action # next state 
-        
         reward = get_reward(self,action)
         
         terminated = np.array_equal(self.current_state, self.transformed_state)
         
+        next_state = self.current_state + action
+        
         if terminated:
-            self.current_state = self.reset() 
-            self.transformed_state = self.get_transformed_state(self.current_state)
-            
+            self.current_state = self.reset()[0]
         else:
             self.current_state = next_state
-            self.transformed_state = self.get_transformed_state(self.current_state)
             
     
         
         return next_state, reward, terminated, False, {} # 마지막 dict는 gym API에는 있는데 나는 안쓸거임
     
-    def reset(self):
+    def reset(self, seed=None,options=None):
         """
         나중에는 이부분 generator()로 대체할거임 일단은 주어진 initial_state에 대한 deterministic policy 학습할 수 있는지 
         """
-        return self.initial_state
+        if seed is not None:
+            np.random.seed(seed)
+        return self.initial_state, {}
 
