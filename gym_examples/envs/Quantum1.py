@@ -31,8 +31,8 @@ class QuantumEnv(gym.Env):
         self.transformed_state = self.get_transformed_state(self.current_state)
         
         #continuous state and action space 일단 ndarray (sampling_rate, 2)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(N, 2))
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(N, 2))
+        self.action_space = spaces.Box(low=-1, high=1, shape=(2*N,))
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(2*N,))
     
     
     def get_transformed_state(self, state):
@@ -43,8 +43,8 @@ class QuantumEnv(gym.Env):
             - transformed_state : ndarray of shape (N,2), dtype=float32
             - 
         """
-        A_ = np.fft.fft(state[:,0])
-        B_ = np.fft.fft(state[:,1])
+        A_ = np.fft.fft(state[:self.N])
+        B_ = np.fft.fft(state[self.N:])
         transformer = envelope.ucsb_transformer(transfer_matrix_params=self.trans_info)
 
         h_matrix = np.array([[transformer.transfer_matrix[i][j](np.pi*2*f) for f in self.freq] for i in range(2) for j in range(2)]).reshape(2, 2, -1)
@@ -56,10 +56,9 @@ class QuantumEnv(gym.Env):
         transformed_a_ = np.fft.ifft(transformed_A_)
         transformed_b_ = np.fft.ifft(transformed_B_)
 
-        transformed_state = np.column_stack((transformed_a_, transformed_b_))
-        
-        
-        return np.column_stack((transformed_a_, transformed_b_))
+        transformed_state = np.hstack((transformed_a_, transformed_b_))
+
+        return transformed_state
     
     def step(self, action):
         #action을 return하는 get_action(observation)는 다른 곳에서 정의할거임
@@ -110,20 +109,15 @@ class QuantumEnv(gym.Env):
         
         next_state = self.current_state + action
         
-        if terminated:
-            self.current_state = self.reset()[0]
-        else:
-            self.current_state = next_state
-            
-    
-        
-        return next_state, reward, terminated, False, {} # 마지막 dict는 gym API에는 있는데 나는 안쓸거임
+        return next_state, reward, terminated, False, {} 
     
     def reset(self, seed=None,options=None):
         """
+        option 이라는 좆같은 {} 도 return함 까먹으면안됨
         나중에는 이부분 generator()로 대체할거임 일단은 주어진 initial_state에 대한 deterministic policy 학습할 수 있는지 
         """
         if seed is not None:
             np.random.seed(seed)
+        self.current_state = self.initial_state
         return self.initial_state, {}
 
