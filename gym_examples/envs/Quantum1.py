@@ -38,9 +38,9 @@ class QuantumEnv(gym.Env):
     def get_transformed_state(self, state):
         """
         PARAMETER
-            - state : ndarray of shape (N, 2),  dtype=float32
+            - state : ndarray of shape (2N,),  dtype=float32
         RETURN
-            - transformed_state : ndarray of shape (N,2), dtype=float32
+            - transformed_state : ndarray of shape (2N), dtype=float32
             - 
         """
         A_ = np.fft.fft(state[:self.N])
