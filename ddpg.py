@@ -150,7 +150,7 @@ def ddpg(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
     ac_targ = deepcopy(ac)
 
-    # Freeze target networks with respect to optimizers (only update via polyak averaging)
+    # (Freeze) target networks with respect to optimizers (only update via polyak averaging)
     for p in ac_targ.parameters():
         p.requires_grad = False
 
@@ -174,7 +174,7 @@ def ddpg(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
         # MSE loss against Bellman backup
         loss_q = ((q - backup)**2).mean()
-
+ 
         # Useful info for logging
         loss_info = dict(QVals=q.detach().numpy())
 

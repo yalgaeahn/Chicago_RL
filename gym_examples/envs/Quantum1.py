@@ -53,12 +53,12 @@ class QuantumEnv(gym.Env):
         transformed_A_ = h_11 * A_ + h_12 * B_
         transformed_B_ = h_21 * A_ + h_22 * B_
         
-        transformed_a_ = np.fft.ifft(transformed_A_)
+        transformed_a_ = np.fft.ifft(transformed_A_) #complex128
         transformed_b_ = np.fft.ifft(transformed_B_)
 
         transformed_state = np.hstack((transformed_a_, transformed_b_))
 
-        return transformed_state
+        return transformed_state.astype('float32')
     
     def step(self, action):
         #action을 return하는 get_action(observation)는 다른 곳에서 정의할거임
@@ -90,7 +90,7 @@ class QuantumEnv(gym.Env):
      
         def get_reward(self,action): 
             """
-            get_transformed_state(current_state,action)으로 얻은 녀석이 innitial state와 얼마나 다른지  state ndarray (100,2)
+            get_transformed_state(current_state)으로 얻은 녀석이 innitial state와 얼마나 다른지
             """
             transformed_state = self.get_transformed_state(self.current_state + action)
             
